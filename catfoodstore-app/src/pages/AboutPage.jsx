@@ -4,27 +4,13 @@ import { Link } from "react-router-dom";
 export default function AboutPage() {
   return (
     <div className="w-full">
-
-      {/* ================================ */}
-      {/* HERO SECTION */}
-      {/* ================================ */}
-      <section className="bg-red-600 text-white py-20 text-center px-6">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-wide">
-          เกี่ยวกับ Srivilize
-        </h1>
-        <p className="text-lg md:text-xl max-w-3xl mx-auto opacity-95">
-          ร้านอาหารแมวระดับพรีเมียม ที่ใส่ใจคุณภาพ โภชนาการ  
-          และสุขภาพของแมวทุกตัวเหมือนเป็นครอบครัวเดียวกัน
-        </p>
-      </section>
-
       {/* ================================ */}
       {/* STORY SECTION */}
       {/* ================================ */}
       <section className="max-w-6xl mx-auto py-16 px-6 grid md:grid-cols-2 gap-12 items-center">
         {/* IMAGE */}
         <img
-          src="/catfood/images/about-cat.jpg"
+          src="/catfood/images/canin.jpg"
           alt="Srivilize"
           className="rounded-2xl shadow-lg object-cover w-full h-80"
         />

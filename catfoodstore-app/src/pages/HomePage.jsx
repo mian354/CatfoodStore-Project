@@ -1,185 +1,241 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-// ตัวอย่างสินค้า
+/* SAMPLE PRODUCTS */
 const sampleProducts = [
   {
     id: 1,
     name: "Royal Canin Kitten",
     price: 450,
     image_url: "/catfood/images/kitten.jpg",
+    badge: "new",
   },
   {
     id: 2,
     name: "Royal Canin Home Life Indoor",
     price: 389,
     image_url: "/catfood/images/indoor.jpg",
+    badge: "new",
   },
   {
     id: 3,
     name: "Royal Canin Urinary Care",
     price: 520,
     image_url: "/catfood/images/Urinary-Care.jpg",
+    badge: "new",
   },
 ];
 
 export default function HomePage() {
+  const [toast, setToast] = useState(null);
+
+  /* เพิ่มลงตะกร้า */
+  const addToCart = (product) => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    const index = cart.findIndex((item) => item.id === product.id);
+
+    if (index >= 0) cart[index].quantity += 1;
+    else cart.push({ ...product, quantity: 1 });
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cart-updated"));
+
+    setToast(`เพิ่ม ${product.name} ลงในตะกร้าแล้ว 🛒`);
+    setTimeout(() => setToast(null), 2000);
+  };
+
   return (
-    <div className="w-full">
-      
-      {/* HERO */}
-      <section className="bg-red-600 text-white py-16 px-6 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-3">
-          Srivilize — อาหารแมว Royal Canin ของแท้
-        </h1>
-        <p className="text-lg md:text-xl opacity-90 mb-6">
-          คัดสรรโภชนาการคุณภาพสูง สำหรับทุกสายพันธุ์และทุกช่วงวัย
-        </p>
+    <div className="w-full bg-white">
 
-        <div className="flex justify-center gap-4">
-          <Link
-            to="/products"
-            className="bg-white text-red-600 px-6 py-3 rounded-lg font-semibold hover:bg-red-100"
-          >
-            ดูสินค้าทั้งหมด
-          </Link>
+{/* HERO — ROYAL CANIN STYLE */}
+<section
+  className="pt-20 pb-28 px-6 bg-cover bg-center bg-no-repeat"
+  style={{ backgroundImage: "url('/catfood/images/canin2.jpg')" }}
+>
+  <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center backdrop-blur-[1px] bg-white/10 p-6 rounded-2xl">
+
+    {/* LEFT — TEXT */}
+    <div>
+      <h1 className="text-5xl font-bold text-red-600 leading-tight drop-shadow">
+        โภชนาการที่ใช่ สำหรับแมวของคุณ
+      </h1>
+
+      <p className="mt-4 text-gray-700 text-lg leading-relaxed p-3 rounded-lg">
+        คัดสรรอาหาร Royal Canin คุณภาพสูง  
+        เพื่อสุขภาพที่ดีที่สุดของแมวทุกช่วงวัยและทุกสายพันธุ์
+      </p>
+
+      <Link
+        to="/products"
+        className="
+          inline-block mt-6 px-8 py-3 
+          border border-red-600 text-red-600 font-semibold 
+          rounded-full hover:bg-red-600 hover:text-white 
+          transition-all duration-300
+        "
+      >
+        ดูสินค้าทั้งหมด →
+      </Link>
+    </div>
+
+    {/* RIGHT IMAGE (ซ่อนได้ ถ้าภาพใหญ่พอ) */}
+    {/* <div className="flex justify-center">
+        <img src="/catfood/images/hero-cat.png" className="w-80 md:w-96" />
+    </div> */}
+  </div>
+</section>
+
+
+      {/* SECTION: NEW ARRIVALS */}
+      <Section title="สินค้าใหม่ (New Arrivals)">
+        <PremiumProductGrid products={sampleProducts} addToCart={addToCart} />
+      </Section>
+
+      {/* SECTION: BEST SELLERS */}
+      <Section title="สินค้าขายดี (Best Sellers)">
+        <PremiumProductGrid products={sampleProducts} addToCart={addToCart} />
+      </Section>
+
+      {/* SECTION: BREED SPECIFIC */}
+      <Section title="สินค้าแนะนำสำหรับสายพันธุ์">
+        <BreedGrid />
+      </Section>
+
+      {/* TOAST */}
+      {toast && (
+        <div className="
+          fixed bottom-6 left-1/2 -translate-x-1/2 
+          bg-black/80 text-white px-5 py-3 rounded-xl 
+          text-sm shadow-lg animate-fadeIn z-50
+        ">
+          {toast}
         </div>
-      </section>
-
-      {/* สินค้าใหม่ */}
-      <HomeSection title="สินค้าใหม่ (New Arrivals)" link="/products">
-        <ProductGrid products={sampleProducts} />
-      </HomeSection>
-
-      {/* สินค้าขายดี */}
-      <HomeSection title="สินค้าขายดี (Best Sellers)" link="/products">
-        <ProductGrid products={sampleProducts} />
-      </HomeSection>
-
-      {/* สำหรับสายพันธุ์ */}
-      <HomeSection title="สินค้าแนะนำสำหรับสายพันธุ์ (Breed Specific)">
-        <CollectionGrid>
-          <CollectionCard
-            title="เปอร์เซีย"
-            img="/catfood/images/persian.Jpg"
-            to="/products?breed=เปอร์เซีย"
-          />
-          <CollectionCard
-            title="บริติชช็อตแฮร์"
-            img="/catfood/images/british.Jpg"
-            to="/products?breed=บริติชช็อตแฮร์"
-          />
-          <CollectionCard
-            title="ทุกสายพันธุ์"
-            img="/catfood/images/all.jpg"
-            to="/products?breed=all"
-          />
-        </CollectionGrid>
-      </HomeSection>
-
-      {/* สำหรับช่วงวัย */}
-      <HomeSection title="สูตรอาหารตามช่วงวัย (By Age)">
-        <CollectionGrid>
-          <CollectionCard
-            title="ลูกแมว (Kitten)"
-            img="/catfood/images/allkitten.jpg"
-            to="/products?age=kitten"
-          />
-          <CollectionCard
-            title="แมวโต (Adult)"
-            img="/catfood/images/adult.jpg"
-            to="/products?age=adult"
-          />
-          <CollectionCard
-            title="สุขภาพพิเศษ"
-            img="/catfood/images/health.jpg"
-            to="/products?age=special_care"
-          />
-        </CollectionGrid>
-      </HomeSection>
-
-      {/* ปัญหาสุขภาพ */}
-      <HomeSection title="ดูแลปัญหาสุขภาพ (Health Needs)">
-        <CollectionGrid>
-          <CollectionCard
-            title="ระบบปัสสาวะ (Urinary)"
-            img="/catfood/images/Urinary-Care.jpg"
-            to="/products?health=urinary"
-          />
-          <CollectionCard
-            title="ขนร่วง / Hairball"
-            img="/catfood/images/hair.jpg"
-            to="/products?health=hairball"
-          />
-          <CollectionCard
-            title="ควบคุมน้ำหนัก"
-            img="/catfood/images/weight.jpg"
-            to="/products?health=weight"
-          />
-        </CollectionGrid>
-      </HomeSection>
-
+      )}
     </div>
   );
 }
 
-/* --------------------------
-   Components
---------------------------- */
-
-function HomeSection({ title, link, children }) {
+/* ----------------------------------------
+   SECTION WRAPPER A — ROYAL CANIN STYLE
+---------------------------------------- */
+function Section({ title, children }) {
   return (
-    <section className="max-w-6xl mx-auto py-12 px-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
-        {link && (
-          <Link to={link} className="text-red-600 font-semibold">
-            ดูทั้งหมด →
-          </Link>
-        )}
-      </div>
+    <section className="max-w-7xl mx-auto py-14 px-6">
+      <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">
+        {title}
+      </h2>
       {children}
     </section>
   );
 }
 
-function ProductGrid({ products }) {
+/* ----------------------------------------
+   PRODUCT CARD — PREMIUM
+---------------------------------------- */
+function PremiumProductCard({ product, addToCart }) {
+  const badgeStyle = {
+    new: "bg-blue-500",
+    best: "bg-red-600",
+    recommend: "bg-green-600",
+  };
+
   return (
-    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {products.map((p) => (
-        <Link
-          key={p.id}
-          to={`/product/${p.id}`}
-          className="border rounded-lg p-4 bg-white hover:shadow-lg transition"
-        >
+    <div
+      className="
+        bg-white border rounded-2xl overflow-hidden flex flex-col
+        shadow-sm hover:shadow-2xl 
+        transition-all duration-300 group
+      "
+    >
+      <div className="relative">
+        <Link to={`/product/${product.id}`}>
           <img
-            src={p.image_url}
-            alt={p.name}
-            className="w-full h-40 object-cover rounded-md"
+            src={product.image_url}
+            alt={product.name}
+            className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          <h3 className="mt-3 font-semibold text-gray-800">{p.name}</h3>
-          <p className="text-red-600 font-bold mt-1">{p.price} ฿</p>
         </Link>
+
+        {product.badge && (
+          <span
+            className={`
+              absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full shadow 
+              text-white
+            ${badgeStyle[product.badge]}
+          `}
+          >
+            {product.badge === "new" && "ใหม่"}
+            {product.badge === "best" && "ขายดี"}
+            {product.badge === "recommend" && "แนะนำ"}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col flex-grow p-4">
+        <h3 className="font-semibold text-lg text-gray-900 min-h-[48px] leading-snug">
+          {product.name}
+        </h3>
+
+        <p className="text-red-600 font-bold mb-4">{product.price} ฿</p>
+
+        <button
+          onClick={() => addToCart(product)}
+          className="
+            mt-auto w-full py-3 
+            bg-red-600 text-white font-semibold rounded-xl 
+            shadow-md hover:shadow-xl 
+            transition-all duration-300 
+            active:scale-95
+          "
+        >
+          🛒 เพิ่มลงตะกร้า
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* GRID (สินค้า) */
+function PremiumProductGrid({ products, addToCart }) {
+  return (
+    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-8">
+      {products.map((p) => (
+        <PremiumProductCard key={p.id} product={p} addToCart={addToCart} />
       ))}
     </div>
   );
 }
 
-function CollectionGrid({ children }) {
-  return <div className="grid md:grid-cols-3 gap-6">{children}</div>;
+/* BREED SECTION (ยังคงของเก่า แต่แต่งใหม่ได้ถ้าฟ้าต้องการ) */
+function BreedGrid() {
+  return (
+    <div className="grid md:grid-cols-3 gap-6">
+      <BreedCard
+        title="เปอร์เซีย"
+        img="/catfood/images/persian.jpg"
+        to="/products?breed=เปอร์เซีย"
+      />
+      <BreedCard
+        title="บริติชช็อตแฮร์"
+        img="/catfood/images/british.jpg"
+        to="/products?breed=บริติชช็อตแฮร์"
+      />
+      <BreedCard title="ทุกสายพันธุ์" img="/catfood/images/all.jpg" to="/products?breed=all" />
+    </div>
+  );
 }
 
-function CollectionCard({ title, img, to }) {
+function BreedCard({ title, img, to }) {
   return (
     <Link
       to={to}
-      className="bg-white p-6 text-center rounded-xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1"
+      className="
+        bg-white p-6 text-center rounded-xl shadow-md 
+        hover:shadow-xl transition transform hover:-translate-y-1
+      "
     >
-      <img
-        src={img}
-        alt={title}
-        className="h-20 w-20 mx-auto object-contain mb-4"
-      />
+      <img src={img} alt={title} className="h-20 w-20 mx-auto object-contain mb-4" />
       <h3 className="font-semibold text-gray-800">{title}</h3>
     </Link>
   );

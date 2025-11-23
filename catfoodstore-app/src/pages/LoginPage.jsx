@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -8,44 +9,50 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
 
-const handleLogin = () => {
-  if (!email || !password) {
-    setError("กรุณากรอกอีเมลและรหัสผ่าน");
-    return;
-  }
+  const handleLogin = async () => {
+    setError("");
 
-  // 📌 ตรวจว่าเป็นแอดมินไหม
-  if (email === "admin@cat.com" && password === "1234") {
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("role", "admin");
-    alert("เข้าสู่ระบบแบบผู้ดูแลระบบ!");
-    navigate("/admin/products"); // ⬅ ไปหน้าจัดการสินค้า
-    return;
-  }
+    if (!email || !password) {
+      setError("กรุณากรอกอีเมลและรหัสผ่าน");
+      return;
+    }
 
-  // 📌 ผู้ใช้ทั่วไป
-  localStorage.setItem("isLoggedIn", "true");
-  localStorage.setItem("role", "user");
-  localStorage.setItem("userEmail", email);
+    try {
+      const res = await axios.post("/api/login", {
+        email,
+        password,
+      });
 
-  alert("เข้าสู่ระบบสำเร็จ!");
-  navigate("/"); // กลับหน้าแรก
-};
+      // ⬇ ได้ข้อมูล user จาก backend
+      const { id, email: userEmail, role } = res.data;
 
+      // เก็บสถานะการเข้าสู่ระบบ
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userEmail", userEmail);
+      localStorage.setItem("role", role);
+      localStorage.setItem("userId", id);
+
+      alert("เข้าสู่ระบบสำเร็จ!");
+
+      if (role === "admin") {
+        navigate("/admin/products");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      console.log("Login error:", err);
+      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
-
-      {/* CARD */}
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border">
-
         <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">
           เข้าสู่ระบบ
         </h1>
 
-        {/* FORM */}
         <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-
           <div>
             <label className="block text-gray-700 font-medium mb-1">
               อีเมล
@@ -74,7 +81,6 @@ const handleLogin = () => {
             />
           </div>
 
-          {/* ERROR */}
           {error && (
             <p className="text-red-600 text-sm text-center">{error}</p>
           )}
@@ -88,7 +94,6 @@ const handleLogin = () => {
             เข้าสู่ระบบ
           </button>
         </form>
-
       </div>
     </div>
   );
