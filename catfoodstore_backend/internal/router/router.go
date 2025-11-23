@@ -1,35 +1,64 @@
 package router
 
 import (
-	"database/sql"
-	"net/http"
+    "database/sql"
+    "net/http"
 
-	"catfoodstore_backend/internal/handler"
-	"catfoodstore_backend/internal/middleware"
-	"catfoodstore_backend/internal/repository"
-	"catfoodstore_backend/internal/service"
+    "catfoodstore_backend/internal/handler"
+    "catfoodstore_backend/internal/middleware"
+    "catfoodstore_backend/internal/repository"
+    "catfoodstore_backend/internal/service"
 
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
+    "github.com/gin-contrib/cors"
 )
 
 func New(db *sql.DB) *gin.Engine {
-	r := gin.New()
+    r := gin.New()
 
-	r.Use(middleware.Logger())
-	r.Use(middleware.Recover())
+    // ⭐⭐⭐ เปิด CORS สำหรับ React ⭐⭐⭐
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+        AllowCredentials: true,
+    }))
 
-	r.GET("/health", func(c *gin.Context) {
-		if err := db.Ping(); err != nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unhealthy"})
-			return
-		}
-		c.JSON(200, gin.H{"status": "ok"})
-	})
+    r.Use(middleware.Logger())
+    r.Use(middleware.Recover())
 
-	repo := repository.NewProductRepository(db)
-	svc := service.NewProductService(repo)
-	h := handler.NewProductHandler(svc)
-	h.RegisterRoutes(r)
+    // Health Check
+    r.GET("/health", func(c *gin.Context) {
+        if err := db.Ping(); err != nil {
+            c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unhealthy"})
+            return
+        }
+        c.JSON(200, gin.H{"status": "ok"})
+    })
 
-	return r
+    // Docs...
+    r.GET("/docs/swagger.yaml", func(c *gin.Context) {
+        c.File("./docs/swagger.yaml")
+    })
+
+    // PRODUCT MODULE
+    productRepo := repository.NewProductRepository(db)
+    productService := service.NewProductService(productRepo)
+    productHandler := handler.NewProductHandler(productService)
+    productHandler.RegisterRoutes(r)
+
+    // USER MODULE
+    userRepo := repository.NewUserRepository(db)
+    userService := service.NewUserService(userRepo)
+    userHandler := handler.NewUserHandler(userService)
+    userHandler.RegisterRoutes(r)
+
+    // ADMIN ROUTES
+    admin := r.Group("/api/admin")
+    admin.Use(middleware.AuthMiddleware, middleware.AdminOnly)
+    admin.POST("/products", productHandler.Create)
+    admin.PUT("/products/:id", productHandler.Update)
+    admin.DELETE("/products/:id", productHandler.Delete)
+
+    return r
 }

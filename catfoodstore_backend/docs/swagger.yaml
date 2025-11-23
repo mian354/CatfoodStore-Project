@@ -1,0 +1,181 @@
+openapi: 3.0.0
+info:
+  title: CatfoodStore API
+  version: 1.0.0
+  description: |
+    REST API for CatfoodStore backend (Products + Auth + Admin)
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+
+  /api/login:
+    post:
+      summary: Login as user or admin
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login success → return JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+
+  /api/products:
+    get:
+      summary: Get all products
+      tags: [Products]
+      responses:
+        200:
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+    post:
+      summary: Create new product (Admin only)
+      tags: [Products]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        201:
+          description: Created product ID
+
+  /api/products/{id}:
+    get:
+      summary: Get product by ID
+      tags: [Products]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        404:
+          description: Not found
+
+    put:
+      summary: Update product (Admin only)
+      tags: [Products]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        200:
+          description: Updated
+
+    delete:
+      summary: Delete product (Admin only)
+      tags: [Products]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        204:
+          description: Deleted
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        weight:
+          type: number
+        age_group:
+          type: string
+        breed_type:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+        image_url:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+
+    ProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        weight:
+          type: number
+        age_group:
+          type: string
+        breed_type:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+        image_url:
+          type: string
