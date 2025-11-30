@@ -18,8 +18,7 @@ export default function ProductDetailPage() {
 
         setProduct({
           ...res.data,
-          // ⭐ ใช้ special_care จาก DB → map เป็น health เพื่อใช้ต่อได้เลย
-          health: res.data.special_care || [],
+          health: res.data.special_care || [], // ⭐ ใช้ special_care → health
         });
       } catch (err) {
         console.error("API ERROR:", err);
@@ -61,20 +60,26 @@ export default function ProductDetailPage() {
   };
 
   if (!product)
-    return (
-      <p className="text-center py-20 text-gray-500">ไม่พบสินค้า</p>
-    );
+    return <p className="text-center py-20 text-gray-500">ไม่พบสินค้า</p>;
 
   const isFav = favorites.includes(product.id);
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-600 hover:text-red-600 mb-6 font-medium"
-      >
-        ← กลับ
-      </button>
+  <div className="max-w-5xl mx-auto px-6 py-10">
+
+  {/* ⭐ ปุ่มกลับไปหน้าก่อนหน้า */}
+  <button
+    onClick={() => navigate(-1)}
+    className="mb-6 flex items-center gap-2 px-4 py-2 rounded-lg 
+               border border-gray-300 bg-white shadow-sm
+               text-gray-700 hover:bg-gray-50 hover:border-gray-400 
+               transition text-sm font-medium"
+  >
+    <span className="text-lg">←</span>
+    กลับไปหน้าก่อนหน้า
+  </button>
+
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
@@ -91,7 +96,7 @@ export default function ProductDetailPage() {
         <div className="flex flex-col gap-4">
 
           {/* ชื่อ + น้ำหนัก */}
-          <h1 className="text-3xl font-bold text-gray-900 leading-snug">
+          <h1 className="text-2xl md:text-[28px] font-semibold tracking-tight text-gray-900">
             {product.name}{" "}
             <span className="font-bold">{product.weight}</span>
           </h1>
@@ -111,19 +116,19 @@ export default function ProductDetailPage() {
             <p><strong>ประเภทอาหาร:</strong> {product.category}</p>
             <p><strong>สายพันธุ์:</strong> {product.breed_type.join(", ")}</p>
 
-            {/* ⭐ แสดง special care */}
             {product.health?.length > 0 && (
               <p><strong>สุขภาพเฉพาะทาง:</strong> {product.health.join(", ")}</p>
             )}
           </div>
 
-          {/* ปุ่ม */}
+          {/* ADD TO CART */}
           <button
             onClick={addToCart}
             className="bg-red-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-red-700 transition"
           >
             🛒 เพิ่มลงตะกร้า
           </button>
+
         </div>
       </div>
     </div>

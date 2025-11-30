@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const STATIC_PAGES = [
   { label: "หน้าแรก", path: "/" },
@@ -17,12 +18,28 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   /* ======================================================
+       โหลดสินค้าเก็บไว้ใน localStorage (แก้ search ไม่ตรง)
+  ====================================================== */
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const res = await axios.get("/api/products");
+        localStorage.setItem("products", JSON.stringify(res.data));
+      } catch (err) {
+        console.error("โหลดสินค้าไม่สำเร็จ:", err);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  /* ======================================================
        CART COUNT (นับจำนวน "รายการ" ไม่ใช่จำนวนชิ้น)
   ====================================================== */
   useEffect(() => {
     const loadCart = () => {
       const stored = JSON.parse(localStorage.getItem("cart")) || [];
-      setCartCount(stored.length);  // ⭐ นับจำนวน unique items
+      setCartCount(stored.length);
     };
 
     loadCart();
@@ -32,7 +49,7 @@ const Navbar = () => {
   }, []);
 
   /* ======================================================
-       SMART SEARCH SUGGESTION
+       SMART SEARCH SUGGESTION (แก้ให้เสิร์ชตรง + live)
   ====================================================== */
   useEffect(() => {
     if (searchText.trim() === "") {
@@ -42,18 +59,27 @@ const Navbar = () => {
 
     let results = [];
 
+    const keyword = searchText.toLowerCase().replace(/\s/g, "");
+
     // MATCH STATIC PAGES
     STATIC_PAGES.forEach((page) => {
-      if (page.label.toLowerCase().includes(searchText.toLowerCase())) {
+      if (page.label.toLowerCase().includes(keyword)) {
         results.push({ type: "page", label: page.label, path: page.path });
       }
     });
 
-    // MATCH PRODUCTS
+    // MATCH PRODUCTS (โหลดจาก localStorage)
     const products = JSON.parse(localStorage.getItem("products")) || [];
+
     products.forEach((p) => {
-      if (p.name.toLowerCase().includes(searchText.toLowerCase())) {
-        results.push({ type: "product", label: p.name, path: `/products/${p.id}` });
+      const nameClean = p.name.toLowerCase().replace(/\s/g, "");
+
+      if (nameClean.includes(keyword)) {
+        results.push({
+          type: "product",
+          label: p.name,
+          path: `/products/${p.id}`,
+        });
       }
     });
 
@@ -67,7 +93,7 @@ const Navbar = () => {
     ];
 
     dynamic.forEach((item) => {
-      if (item.keyword.includes(searchText.toLowerCase())) results.push(item);
+      if (item.keyword.includes(keyword)) results.push(item);
     });
 
     setSuggestions(results.slice(0, 7));
@@ -77,7 +103,6 @@ const Navbar = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (!searchText.trim()) return;
-
     navigate(`/products?search=${searchText}`);
     setSuggestions([]);
     setSearchText("");

@@ -25,11 +25,6 @@ function App() {
   return (
     <div className="App">
 
-      {/* TEST TAILWIND */}
-      <div className="bg-blue-500 h-10 text-white flex items-center justify-center">
-        TEST TAILWIND
-      </div>
-
       <Navbar />
 
       <ScrollToTop />   {/* ⭐ ทำให้ทุกหน้าเด้งขึ้นบนสุด */}

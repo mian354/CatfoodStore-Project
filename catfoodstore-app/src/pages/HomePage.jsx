@@ -72,7 +72,6 @@ useEffect(() => {
 }, []);
 
 
-
   /* 🛒 เพิ่มลงตะกร้า */
   const addToCart = (product) => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -131,6 +130,7 @@ useEffect(() => {
         title="สินค้าแนะนำตามสายพันธุ์"
         subtitle="โภชนาการเฉพาะสำหรับแต่ละสายพันธุ์เพื่อสุขภาพที่ตรงจุด"
         link="/products"
+        className="pt-2 pb-8"
       >
         {Object.keys(breedGroups).length === 0 ? (
           <p className="text-gray-500">ยังไม่มีสินค้าแยกตามสายพันธุ์</p>
@@ -182,20 +182,23 @@ backgroundImage: `url('${breedImages[breed] || "/catfood/images/default.png"}')`
 /* ----------------------------------------
    PREMIUM SECTION HEADER
 ---------------------------------------- */
-function HomeSection({ title, subtitle, link, children }) {
+function HomeSection({ title, subtitle, link, children, className = "" }) {
   return (
-    <section className="max-w-7xl mx-auto py-20 px-6">
+<section className={`max-w-7xl mx-auto py-16 px-6 ${className}`}>
 
       {/* HEADER */}
-      <div className="mb-10">
-        <div className="flex justify-between items-end">
-          <div> 
-<h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+      <div className="space-y-4 mb-14">
+
+        {/* TITLE + SUBTITLE + LINK */}
+        <div className="flex justify-between items-start">
+          <div className="space-y-1.5">
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight leading-tight">
               {title}
             </h2>
 
+
             {subtitle && (
-<p className="text-gray-500 text-base mt-1">
+              <p className="text-gray-500 text-lg leading-relaxed">
                 {subtitle}
               </p>
             )}
@@ -204,20 +207,25 @@ function HomeSection({ title, subtitle, link, children }) {
           {link && (
             <Link
               to={link}
-className="text-red-600 text-base font-medium hover:text-red-700 transition"
+              className="text-red-600 text-base font-semibold hover:text-red-700 transition"
             >
               ดูทั้งหมด →
             </Link>
           )}
         </div>
 
-<div className="mt-3 h-[2px] w-16 bg-red-500 rounded-full"></div>
+        {/* 🔥 Premium Red Divider — Centered */}
+        <div className="flex justify-start">
+          <div className="h-[3px] w-20 bg-red-600 rounded-full shadow-sm"></div>
+        </div>
+
       </div>
 
       {children}
     </section>
   );
 }
+
 
 /* ----------------------------------------
    Horizontal Scroll + Arrows

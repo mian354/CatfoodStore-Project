@@ -21,21 +21,37 @@ export default function ProductListPage() {
   const [openHealth, setOpenHealth] = useState(true);
   const [openBreed, setOpenBreed] = useState(true);
 
-  /* ⭐ อ่าน query string */
+  const [loaded, setLoaded] = useState(false); // ⭐ ป้องกัน render ก่อนโหลดเสร็จ
+
+  /* ⭐ โหลดฟิลเตอร์จาก localStorage */
+useEffect(() => {
+  const saved = JSON.parse(localStorage.getItem("filters"));
+  if (saved) {
+    setFilters(saved);
+  }
+}, []);
+
+/* ⭐ ตั้งค่า filter จาก ?breed=xxx เมื่อมาจากหน้า Home */
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const breed = params.get("breed");
+
+  if (breed) {
+    const newFilters = {
+      ...filters,
+      breed: [breed],
+    };
+
+    setFilters(newFilters);
+    localStorage.setItem("filters", JSON.stringify(newFilters));
+  }
+}, [location.search]);
+
+
+  /* ⭐ บันทึก filters ทุกครั้งที่เปลี่ยน */
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-
-    const breed = params.get("breed");
-    const age = params.get("age");
-    const special = params.get("special_care");
-
-    setFilters((prev) => ({
-      ...prev,
-      breed: breed ? [breed] : [],
-      age: age ? [age] : [],
-      special_care: special ? [special] : [],
-    }));
-  }, [location.search]);
+    localStorage.setItem("filters", JSON.stringify(filters));
+  }, [filters]);
 
   /* ⭐ โหลดสินค้า */
   useEffect(() => {
@@ -52,7 +68,7 @@ export default function ProductListPage() {
         }));
 
         setAllProducts(items);
-        setFiltered(items);
+        setLoaded(true); // ⭐ โหลดสินค้าเสร็จแล้ว ค่อย render UI
       } catch (e) {
         console.error("Load failed", e);
       }
@@ -106,12 +122,15 @@ export default function ProductListPage() {
     setTimeout(() => setToast(null), 2000);
   };
 
-  /* ⭐ Toggle checkbox */
+  /* ⭐ Toggle checkbox → บันทึก localStorage ทันที */
   const toggleCheckbox = (group, value) => {
     setFilters((prev) => {
       const set = new Set(prev[group]);
       set.has(value) ? set.delete(value) : set.add(value);
-      return { ...prev, [group]: [...set] };
+
+      const updated = { ...prev, [group]: [...set] };
+      localStorage.setItem("filters", JSON.stringify(updated)); 
+      return updated;
     });
   };
 
@@ -148,8 +167,14 @@ export default function ProductListPage() {
     setFiltered(result);
   }, [filters, allProducts, sortBy]);
 
-  const resetFilters = () =>
-    setFilters({ type: "", age: [], special_care: [], breed: [] });
+  const resetFilters = () => {
+    const empty = { type: "", age: [], special_care: [], breed: [] };
+    setFilters(empty);
+    localStorage.setItem("filters", JSON.stringify(empty));
+  };
+
+  /* ⭐ ป้องกัน render ก่อนโหลดสินค้ากับ filters เสร็จ */
+  if (!loaded) return null;
 
   /* ===================== UI ===================== */
 
@@ -157,16 +182,13 @@ export default function ProductListPage() {
     <div className="max-w-7xl mx-auto px-6 py-8">
 
       {/* PAGE TITLE */}
-      <h1 className="text-2xl font-semibold text-gray-900 mb-4">
-        {filters.type === "" && "สินค้าทั้งหมด"}
-        {filters.type === "dry" && "อาหารเม็ดสำหรับแมว"}
-        {filters.type === "wet" && "อาหารเปียกสำหรับแมว"}
-        {filters.type === "snack" && "ขนมสำหรับแมว"}
-      </h1>
+      <div className="mt-2 mb-4">
+        <h1 className="text-3xl font-bold text-gray-900">หมวดหมู่สินค้า</h1>
+        <p className="text-gray-600 text-base font-medium mt-1">
+          พบ {filtered.length} รายการ
+        </p>
+      </div>
 
-      <p className="text-base font-medium text-gray-700 mb-2">
-        เลือกหมวดหมู่สินค้า
-      </p>
 
       {/* CATEGORY + SORT */}
       <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
@@ -179,7 +201,13 @@ export default function ProductListPage() {
           ].map((c) => (
             <button
               key={c.value}
-              onClick={() => setFilters((prev) => ({ ...prev, type: c.value }))}
+              onClick={() =>
+                setFilters((prev) => {
+                  const updated = { ...prev, type: c.value };
+                  localStorage.setItem("filters", JSON.stringify(updated)); 
+                  return updated;
+                })
+              }
               className={`
                 px-6 py-2.5 rounded-full text-base font-medium transition
                 ${
@@ -194,17 +222,17 @@ export default function ProductListPage() {
           ))}
         </div>
 
+        
         <div className="flex items-center gap-4">
-          <p className="text-gray-600 font-medium whitespace-nowrap">
-            พบ {filtered.length} รายการ
-          </p>
           <SortDropdown sortBy={sortBy} setSortBy={setSortBy} />
         </div>
       </div>
 
+
       {/* GRID */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
 
+        
         {/* SIDEBAR */}
         <aside className="md:col-span-1 bg-white border rounded-xl shadow-sm p-6 h-fit">
 
@@ -300,14 +328,17 @@ function SortDropdown({ sortBy, setSortBy }) {
       <select
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
-        className="px-4 py-2 pr-8 rounded-lg border shadow-sm bg-white text-gray-700 font-medium"
+        className="px-4 py-2 pr-10 rounded-lg border shadow-sm bg-white text-gray-700 font-medium appearance-none"
       >
         <option value="">จัดเรียงสินค้า</option>
         <option value="price_asc">ราคาน้อย → มาก</option>
         <option value="price_desc">ราคามาก → น้อย</option>
         <option value="newest">ใหม่ล่าสุด</option>
       </select>
-      <span className="absolute right-2 top-2.5 text-gray-500">▼</span>
+
+      <span className="pointer-events-none absolute right-3 top-2.5 text-gray-500 text-lg">
+        ﹀
+      </span>
     </div>
   );
 }
