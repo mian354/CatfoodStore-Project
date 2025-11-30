@@ -10,7 +10,7 @@ export default function ProductDetailPage() {
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
 
-  /* โหลดสินค้าจาก API จริง */
+  /* ⭐ โหลดสินค้าจาก API จริง */
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -18,7 +18,8 @@ export default function ProductDetailPage() {
 
         setProduct({
           ...res.data,
-          health: res.data.health || [], // ป้องกัน null
+          // ⭐ ใช้ special_care จาก DB → map เป็น health เพื่อใช้ต่อได้เลย
+          health: res.data.special_care || [],
         });
       } catch (err) {
         console.error("API ERROR:", err);
@@ -76,6 +77,7 @@ export default function ProductDetailPage() {
       </button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+
         {/* IMAGE */}
         <div>
           <img
@@ -86,48 +88,43 @@ export default function ProductDetailPage() {
         </div>
 
         {/* INFO */}
-        {/* INFO */}
+        <div className="flex flex-col gap-4">
 
-{/* INFO */}
-<div className="flex flex-col gap-4">
+          {/* ชื่อ + น้ำหนัก */}
+          <h1 className="text-3xl font-bold text-gray-900 leading-snug">
+            {product.name}{" "}
+            <span className="font-bold">{product.weight}</span>
+          </h1>
 
-  {/* ⭐ ชื่อ + น้ำหนัก */}
-  {/* ⭐ ชื่อ + น้ำหนัก */}
-    <h1 className="text-3xl font-bold text-gray-900 leading-snug">
-      {product.name}{" "}
-      <span className="font-bold">{product.weight}</span>
-    </h1>
+          {/* ราคา */}
+          <p className="text-red-600 font-bold text-2xl">{product.price} ฿</p>
 
+          {/* รายละเอียด */}
+          <p className="text-gray-700 leading-relaxed">
+            {product.description || "ไม่มีรายละเอียดสินค้า"}
+          </p>
 
-  {/* ราคา */}
-  <p className="text-red-600 font-bold text-2xl">{product.price} ฿</p>
+          {/* รายละเอียดอื่น */}
+          <div className="mt-4 space-y-2 text-sm">
+            <p><strong>ปริมาณ:</strong> {product.weight}</p>
+            <p><strong>ช่วงวัย:</strong> {product.age_group}</p>
+            <p><strong>ประเภทอาหาร:</strong> {product.category}</p>
+            <p><strong>สายพันธุ์:</strong> {product.breed_type.join(", ")}</p>
 
-  {/* รายละเอียด */}
-  <p className="text-gray-700 leading-relaxed">
-    {product.description || "ไม่มีรายละเอียดสินค้า"}
-  </p>
+            {/* ⭐ แสดง special care */}
+            {product.health?.length > 0 && (
+              <p><strong>สุขภาพเฉพาะทาง:</strong> {product.health.join(", ")}</p>
+            )}
+          </div>
 
-  {/* รายละเอียดอื่น ๆ */}
-  <div className="mt-4 space-y-2 text-sm">
-    <p><strong>ปริมาณ:</strong> {product.weight}</p>
-    <p><strong>ช่วงวัย:</strong> {product.age_group}</p>
-    <p><strong>ประเภทอาหาร:</strong> {product.category}</p>
-    <p><strong>สายพันธุ์:</strong> {product.breed_type.join(", ")}</p>
-    {product.health && (
-      <p><strong>สุขภาพเฉพาะทาง:</strong> {product.health.join(", ")}</p>
-    )}
-  </div>
-
-  {/* ปุ่ม */}
-  <button
-    onClick={addToCart}
-    className="bg-red-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-red-700 transition"
-  >
-    🛒 เพิ่มลงตะกร้า
-  </button>
-</div>
-
-
+          {/* ปุ่ม */}
+          <button
+            onClick={addToCart}
+            className="bg-red-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-red-700 transition"
+          >
+            🛒 เพิ่มลงตะกร้า
+          </button>
+        </div>
       </div>
     </div>
   );

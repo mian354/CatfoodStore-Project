@@ -19,18 +19,23 @@ export default function AdminProductsPage() {
   const [newBreed, setNewBreed] = useState(["all"]);
   const [newHealth, setNewHealth] = useState(["all"]);
 
-  const breedOptions = ["all", "persian", "siamese", "maine_coon"];
-  const healthOptions = ["all", "urinary", "hairball", "digestive"];
+  const [customBreed, setCustomBreed] = useState("");
+  const [customHealth, setCustomHealth] = useState("");
+
+  /* ⭐ เปลี่ยนเป็น state เพื่อให้ dynamic */
+  const [breedOptions, setBreedOptions] = useState([""]);
+  const [healthOptions, setHealthOptions] = useState([""]);
 
   /* ======================== EDIT FORM ======================== */
   const [editItem, setEditItem] = useState(null);
+  const [editCustomBreed, setEditCustomBreed] = useState("");
+  const [editCustomHealth, setEditCustomHealth] = useState("");
 
   const token = localStorage.getItem("token");
 
   /* ======================== LOAD PRODUCTS ======================== */
   const fetchProducts = async () => {
     try {
-      // ⭐ ใช้ route จริงของ backend
       const res = await axios.get("/api/products");
       setProducts(res.data);
     } catch (err) {
@@ -41,6 +46,26 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  /* ======================== GENERATE OPTIONS FROM DB ======================== */
+  useEffect(() => {
+    if (products.length > 0) {
+      const breeds = new Set();
+      const healths = new Set();
+
+      products.forEach((p) => {
+        if (Array.isArray(p.breed_type)) {
+          p.breed_type.forEach((b) => breeds.add(b));
+        }
+        if (Array.isArray(p.special_care)) {
+          p.special_care.forEach((h) => healths.add(h));
+        }
+      });
+
+      setBreedOptions(["all", ...Array.from(breeds)]);
+      setHealthOptions(["all", ...Array.from(healths)]);
+    }
+  }, [products]);
 
   /* ======================== ADD PRODUCT ======================== */
   const addProduct = async () => {
@@ -53,12 +78,10 @@ export default function AdminProductsPage() {
           price: Number(newPrice),
           weight: newWeight,
           stock: Number(newStock),
-
           age_group: newAge,
           category: newCategory,
           breed_type: newBreed,
           special_care: newHealth,
-
           image_url: newImage,
         },
         {
@@ -135,51 +158,53 @@ export default function AdminProductsPage() {
           <h2 className="text-xl font-semibold mb-4">เพิ่มสินค้าใหม่</h2>
 
           <div className="grid gap-4">
+
+            <label>ชื่อสินค้า</label>
             <input
               className="border p-2 rounded"
-              placeholder="ชื่อสินค้า"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
             />
 
+            <label>ราคา</label>
             <input
               type="number"
               className="border p-2 rounded"
-              placeholder="ราคา"
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
             />
 
+            <label>น้ำหนัก เช่น 400g / 1kg</label>
             <input
               className="border p-2 rounded"
-              placeholder="น้ำหนัก เช่น 400g / 1kg"
               value={newWeight}
               onChange={(e) => setNewWeight(e.target.value)}
             />
 
+            <label>จำนวนสต๊อก</label>
             <input
               type="number"
               className="border p-2 rounded"
-              placeholder="จำนวนสต๊อก"
               value={newStock}
               onChange={(e) => setNewStock(e.target.value)}
             />
 
+            <label>ลิงก์รูปสินค้า</label>
             <input
               className="border p-2 rounded"
-              placeholder="ลิงก์รูปสินค้า"
               value={newImage}
               onChange={(e) => setNewImage(e.target.value)}
             />
 
+            <label>รายละเอียดสินค้า</label>
             <textarea
               className="border p-2 rounded h-24"
-              placeholder="รายละเอียดสินค้า"
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
             ></textarea>
 
             {/* AGE */}
+            <label>ช่วงอายุ</label>
             <select
               className="border p-2 rounded"
               value={newAge}
@@ -187,10 +212,11 @@ export default function AdminProductsPage() {
             >
               <option value="kitten">ลูกแมว</option>
               <option value="adult">โตเต็มวัย</option>
-              <option value="special_care">Special care</option>
+              <option value="senior">สูงวัย</option>
             </select>
 
             {/* CATEGORY */}
+            <label>หมวดหมู่สินค้า</label>
             <select
               className="border p-2 rounded"
               value={newCategory}
@@ -204,6 +230,7 @@ export default function AdminProductsPage() {
             {/* BREED TYPE */}
             <div>
               <p className="font-semibold">สายพันธุ์ที่เหมาะสม</p>
+              
               {breedOptions.map((b) => (
                 <label key={b} className="flex items-center gap-2">
                   <input
@@ -220,11 +247,26 @@ export default function AdminProductsPage() {
                   {b}
                 </label>
               ))}
+
+              {/* add new breed */}
+              <input
+                className="border p-2 rounded mt-2 w-full"
+                placeholder="เพิ่มสายพันธุ์ใหม่ (Enter เพื่อเพิ่ม)"
+                value={customBreed}
+                onChange={(e) => setCustomBreed(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && customBreed.trim()) {
+                    setNewBreed([...newBreed, customBreed.trim()]);
+                    setCustomBreed("");
+                  }
+                }}
+              />
             </div>
 
             {/* SPECIAL CARE */}
             <div>
               <p className="font-semibold">สุขภาพเฉพาะทาง</p>
+
               {healthOptions.map((h) => (
                 <label key={h} className="flex items-center gap-2">
                   <input
@@ -241,7 +283,22 @@ export default function AdminProductsPage() {
                   {h}
                 </label>
               ))}
+
+              {/* add new special */}
+              <input
+                className="border p-2 rounded mt-2 w-full"
+                placeholder="เพิ่มสุขภาพเฉพาะทางใหม่ (Enter เพื่อเพิ่ม)"
+                value={customHealth}
+                onChange={(e) => setCustomHealth(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && customHealth.trim()) {
+                    setNewHealth([...newHealth, customHealth.trim()]);
+                    setCustomHealth("");
+                  }
+                }}
+              />
             </div>
+
           </div>
 
           <button
@@ -297,12 +354,14 @@ export default function AdminProductsPage() {
           <div className="bg-white p-6 rounded-xl w-[420px] shadow-lg max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">แก้ไขสินค้า</h2>
 
+            <label>ชื่อสินค้า</label>
             <input
               className="border p-2 w-full mb-3"
               value={editItem.name}
               onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
             />
 
+            <label>ราคา</label>
             <input
               type="number"
               className="border p-2 w-full mb-3"
@@ -312,6 +371,7 @@ export default function AdminProductsPage() {
               }
             />
 
+            <label>ลิงก์รูปสินค้า</label>
             <input
               className="border p-2 w-full mb-3"
               value={editItem.image_url}
@@ -320,6 +380,7 @@ export default function AdminProductsPage() {
               }
             />
 
+            <label>รายละเอียดสินค้า</label>
             <textarea
               className="border p-2 w-full mb-3 h-24"
               value={editItem.description}
@@ -328,6 +389,7 @@ export default function AdminProductsPage() {
               }
             ></textarea>
 
+            <label>น้ำหนัก</label>
             <input
               className="border p-2 w-full mb-3"
               value={editItem.weight}
@@ -336,6 +398,7 @@ export default function AdminProductsPage() {
               }
             />
 
+            <label>จำนวนสต๊อก</label>
             <input
               type="number"
               className="border p-2 w-full mb-3"
@@ -345,6 +408,7 @@ export default function AdminProductsPage() {
               }
             />
 
+            <label>ช่วงอายุ</label>
             <select
               className="border p-2 w-full mb-3"
               value={editItem.age_group}
@@ -354,9 +418,10 @@ export default function AdminProductsPage() {
             >
               <option value="kitten">ลูกแมว</option>
               <option value="adult">โตเต็มวัย</option>
-              <option value="special_care">Special care</option>
+              <option value="senior">สูงวัย</option>
             </select>
 
+            <label>หมวดหมู่สินค้า</label>
             <select
               className="border p-2 w-full mb-3"
               value={editItem.category}
@@ -372,6 +437,7 @@ export default function AdminProductsPage() {
             {/* BREED TYPE */}
             <div className="mb-3">
               <p className="font-semibold">สายพันธุ์ที่เหมาะสม</p>
+
               {breedOptions.map((b) => (
                 <label key={b} className="flex items-center gap-2">
                   <input
@@ -389,11 +455,28 @@ export default function AdminProductsPage() {
                   {b}
                 </label>
               ))}
+
+              <input
+                className="border p-2 rounded mt-2 w-full"
+                placeholder="เพิ่มสายพันธุ์ใหม่ (Enter เพื่อเพิ่ม)"
+                value={editCustomBreed}
+                onChange={(e) => setEditCustomBreed(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && editCustomBreed.trim()) {
+                    setEditItem({
+                      ...editItem,
+                      breed_type: [...editItem.breed_type, editCustomBreed.trim()],
+                    });
+                    setEditCustomBreed("");
+                  }
+                }}
+              />
             </div>
 
             {/* SPECIAL CARE */}
             <div className="mb-3">
               <p className="font-semibold">สุขภาพเฉพาะทาง</p>
+
               {healthOptions.map((h) => (
                 <label key={h} className="flex items-center gap-2">
                   <input
@@ -411,6 +494,22 @@ export default function AdminProductsPage() {
                   {h}
                 </label>
               ))}
+
+              <input
+                className="border p-2 rounded mt-2 w-full"
+                placeholder="เพิ่มสุขภาพเฉพาะทางใหม่ (Enter เพื่อเพิ่ม)"
+                value={editCustomHealth}
+                onChange={(e) => setEditCustomHealth(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && editCustomHealth.trim()) {
+                    setEditItem({
+                      ...editItem,
+                      special_care: [...editItem.special_care, editCustomHealth.trim()],
+                    });
+                    setEditCustomHealth("");
+                  }
+                }}
+              />
             </div>
 
             <div className="flex justify-end gap-3 mt-4">
