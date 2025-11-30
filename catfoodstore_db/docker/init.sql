@@ -14,7 +14,7 @@ CREATE TABLE products (
 
     breed_type VARCHAR[] DEFAULT ARRAY['all'],
 
-    special_care VARCHAR[] DEFAULT ARRAY['all'],   -- ✅ เปลี่ยนกลับมาเป็น special_care
+    special_care VARCHAR[] DEFAULT ARRAY['all'],  
 
     category VARCHAR(20) 
         CHECK (category IN ('dry', 'wet', 'snack')),
@@ -72,10 +72,10 @@ VALUES
  345, '1kg', 'kitten', ARRAY['all'], ARRAY['ระบบทางเดินอาหาร'], 'dry', 40,
  'https://www.brekz.dk/34089/large_default.jpg'),
 
-('อาหารเปียกลูกแมวเนื้อบดเนื้อนุ่มย่อยง่าย',
- 'เนื้อบดละเอียด ย่อยง่าย เหมาะกับลูกแมวกำลังหัดกินอาหาร',
- 45, '85g', 'kitten', ARRAY['all'], ARRAY['all'], 'wet', 100,
- 'https://www.petz.world/wp-content/uploads/2022/12/Screenshot-from-2025-11-14-11-32-17.png');
+('อาหารสำหรับแมวมีภาวะท้องผูก ปรับสมดุลลำไส้',
+ 'อาหารเม็ด ประกอบการรักษาโรค สำหรับแมวโต ที่มีอาการท้องผูก หรือขาดไฟเบอร์และลำไส้ใหญ่อักเสบ อายุ 1 ปีขึ้นไปปลอดภัยต่อระบบทางเดินอาหารโปรตีนคุณภาพดีย่อยได้สูง พร้อมใยอาหารที่สมดุลและพรีไบโอติกส์',
+ 45, '85g', 'adult', ARRAY['all'], ARRAY['ระบบทางเดินอาหาร'], 'dry', 100,
+ 'https://mzoopetmall.com/wp-content/uploads/2023/12/gastro-fiber-768x768.jpeg');
 
 
 INSERT INTO products 
@@ -119,6 +119,72 @@ VALUES
  'พลังงานสูง เสริมข้อต่อและหัวใจ เหมาะกับแมวตัวใหญ่',
  499, '2kg', 'adult', ARRAY['เมนคูน'], ARRAY['all'], 'dry', 30,
  'https://th-test-11.slatic.net/p/1879e104d61655504eba3d343d8003e4.jpg');
+
+ -- ===============================
+-- 1) SENIOR (3 รายการ)
+-- ===============================
+INSERT INTO products 
+(name, description, price, weight, age_group, breed_type, special_care, category, stock, image_url)
+VALUES
+
+('อาหารเม็ดแมวสูงวัยดูแลไตและระบบขับถ่าย',
+ 'โปรตีนคัดสรร โซเดียมต่ำ ช่วยลดภาระการทำงานของไต เหมาะกับแมวสูงวัย',
+ 479, '1kg', 'senior', ARRAY['all'], ARRAY['ระบบทางเดินอาหาร'], 'dry', 45,
+ 'https://img.lazcdn.com/g/p/1c7ab103c28cc910b7b40685965f15ca.jpg'),
+
+('อาหารเปียกแมวสูงวัยเนื้อนุ่มย่อยง่าย',
+ 'เนื้อสัมผัสนุ่มพิเศษ ย่อยง่าย เพิ่มความอยากอาหารในแมวสูงวัย',
+ 55, '85g', 'senior', ARRAY['all'], ARRAY['all'], 'wet', 120,
+ 'https://img.lazcdn.com/g/p/a8c0c49b16e2b30d4ee6f4dcfb614886.png');
+
+
+
+-- ===============================
+-- 2) ผิวหนังและขน (2 รายการ)
+-- ===============================
+INSERT INTO products 
+(name, description, price, weight, age_group, breed_type, special_care, category, stock, image_url)
+VALUES
+('อาหารเม็ดแมวโตสูตรเสริมผิวหนังแข็งแรงและขนสวย',
+ 'สูตรโอเมก้า 3 และไบโอติน ช่วยให้ผิวแข็งแรงและขนเงางาม',
+ 399, '1kg', 'adult', ARRAY['all'], ARRAY['ผิวหนังและขน'], 'dry', 60,
+ 'https://tailybuddy.com/products/378/Hair___Skin_Care.jpg');
+
+
+
+-- ===============================
+-- 3) บริติชช็อตแฮร์ (2 รายการ)
+-- ===============================
+INSERT INTO products
+(name, description, price, weight, age_group, breed_type, special_care, category, stock, image_url)
+VALUES
+('อาหารเม็ดสูตรเฉพาะสำหรับแมวบริติชช็อตแฮร์โครงสร้างใหญ่',
+ 'โปรตีนสูง ไขมันเหมาะสม ช่วยสร้างมวลกล้ามเนื้อแมวโครงสร้างใหญ่',
+ 499, '1.5kg', 'adult', ARRAY['บริติชช็อตแฮร์'], ARRAY['all'], 'dry', 40,
+ 'https://www.petnme.co.th/wp-content/uploads/2024/05/A230500146294-0-768x768.png');
+
+
+
+-- ===============================
+-- 4) SNACK (4 รายการ)
+-- ===============================
+INSERT INTO products 
+(name, description, price, weight, age_group, breed_type, special_care, category, stock, image_url)
+VALUES
+('ขนมแมวแบบเม็ดสูตรควบคุมน้ำหนัก',
+ 'ขนมแคลอรีต่ำ เสริมไฟเบอร์ ช่วยควบคุมน้ำหนัก',
+ 79, '40g', 'adult', ARRAY['all'], ARRAY['ควบคุมน้ำหนัก'], 'snack', 150,
+ 'https://img.lazcdn.com/g/p/0f0b358cd9a3b8d90c2d9d8a60fc1775.jpg'),
+
+('ขนมแมวช่วยลดก้อนขนแบบเคี้ยวง่าย',
+ 'ไฟเบอร์คอมเพล็กซ์ช่วยป้องกันการก้อนขน เคี้ยวง่ายแมวชอบ',
+ 85, '35g', 'adult', ARRAY['all'], ARRAY['ก้อนขน'], 'snack', 160,
+ 'https://tailybuddy.com/products/400/Intense_Beauty_Gravy.jpg'),
+
+('ขนมแมวเพิ่มความอยากอาหารรสเข้มข้น',
+ 'สูตรกระตุ้นความอยากอาหาร เหมาะกับแมวเลือกกิน',
+ 75, '30g', 'adult', ARRAY['all'], ARRAY['all'], 'snack', 150,
+ 'https://littlespider.co.th/upload-img/RC_PET/9003579308738.jpg');
 
 
 -- ===============================
