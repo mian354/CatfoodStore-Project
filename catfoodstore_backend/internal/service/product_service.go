@@ -48,6 +48,12 @@ func (s *productService) GetByID(ctx context.Context, id int64) (*models.Product
 }
 
 func (s *productService) Create(ctx context.Context, p *models.Product) (int64, error) {
+
+	// ⭐ ถ้า special_care ว่าง → ตั้งค่า default = ["all"]
+	if len(p.SpecialCare) == 0 {
+		p.SpecialCare = []string{"all"}
+	}
+
 	if err := validate(p); err != nil {
 		return 0, err
 	}
@@ -55,9 +61,16 @@ func (s *productService) Create(ctx context.Context, p *models.Product) (int64, 
 }
 
 func (s *productService) Update(ctx context.Context, id int64, p *models.Product) error {
+
+	// ⭐ ถ้า special_care ว่าง → ตั้งค่า default = ["all"]
+	if len(p.SpecialCare) == 0 {
+		p.SpecialCare = []string{"all"}
+	}
+
 	if err := validate(p); err != nil {
 		return err
 	}
+
 	p.ID = id
 	err := s.repo.Update(ctx, p)
 	if err == sql.ErrNoRows {
@@ -87,5 +100,6 @@ func validate(p *models.Product) error {
 		return fmt.Errorf("%w: %s", ErrInvalidCategory, p.Category)
 	}
 
+	// ⭐ special_care ไม่ต้อง validate อะไร
 	return nil
 }

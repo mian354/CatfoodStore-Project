@@ -68,18 +68,6 @@ func (h *ProductHandler) GetByID(c *gin.Context) {
 // =============================
 // CREATE
 // =============================
-// JSON ตัวอย่างที่ต้องรองรับ:
-// {
-//   "name": "...",
-//   "description": "...",
-//   "price": 450.0,
-//   "weight": "1kg",
-//   "age_group": "kitten",
-//   "breed_type": ["all"],
-//   "category": "dry",
-//   "image_url": "...",
-//   "stock": 20     ←⭐ ตรงนี้เพิ่มเข้า API
-// }
 func (h *ProductHandler) Create(c *gin.Context) {
     var p models.Product
     if err := c.ShouldBindJSON(&p); err != nil {
@@ -87,8 +75,13 @@ func (h *ProductHandler) Create(c *gin.Context) {
         return
     }
 
+    // ⭐ Default: special_care = ["all"]
+    if len(p.SpecialCare) == 0 {
+        p.SpecialCare = []string{"all"}
+    }
+
     id, err := h.svc.Create(c.Request.Context(), &p)
-    if err != nil {
+   	if err != nil {
         c.JSON(400, gin.H{"error": err.Error()})
         return
     }
@@ -110,6 +103,11 @@ func (h *ProductHandler) Update(c *gin.Context) {
     if err := c.ShouldBindJSON(&p); err != nil {
         c.JSON(400, gin.H{"error": err.Error()})
         return
+    }
+
+    // ⭐ Default: special_care = ["all"]
+    if len(p.SpecialCare) == 0 {
+        p.SpecialCare = []string{"all"}
     }
 
     if err := h.svc.Update(c.Request.Context(), id, &p); err != nil {

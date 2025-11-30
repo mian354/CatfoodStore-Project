@@ -32,7 +32,8 @@ func NewProductRepository(db *sql.DB) ProductRepository {
 func (r *productRepo) FindAll(ctx context.Context) ([]*models.Product, error) {
 	rows, err := r.db.QueryContext(ctx, `
         SELECT id, name, description, price, weight,
-               age_group, breed_type, category, stock, image_url,
+               age_group, breed_type, special_care,
+               category, stock, image_url,
                created_at, updated_at
         FROM products ORDER BY id ASC`)
 	if err != nil {
@@ -45,16 +46,20 @@ func (r *productRepo) FindAll(ctx context.Context) ([]*models.Product, error) {
 	for rows.Next() {
 		var p models.Product
 		var breeds pq.StringArray
+		var care pq.StringArray
 
 		if err := rows.Scan(
 			&p.ID, &p.Name, &p.Description, &p.Price, &p.Weight,
-			&p.AgeGroup, &breeds, &p.Category, &p.Stock, &p.ImageURL,
+			&p.AgeGroup, &breeds, &care,
+			&p.Category, &p.Stock, &p.ImageURL,
 			&p.CreatedAt, &p.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
 
 		p.BreedType = []string(breeds)
+		p.SpecialCare = []string(care)
+
 		list = append(list, &p)
 	}
 
@@ -68,16 +73,19 @@ func (r *productRepo) FindAll(ctx context.Context) ([]*models.Product, error) {
 func (r *productRepo) FindByID(ctx context.Context, id int64) (*models.Product, error) {
 	row := r.db.QueryRowContext(ctx, `
         SELECT id, name, description, price, weight,
-               age_group, breed_type, category, stock, image_url,
+               age_group, breed_type, special_care,
+               category, stock, image_url,
                created_at, updated_at
         FROM products WHERE id = $1`, id)
 
 	var p models.Product
 	var breeds pq.StringArray
+	var care pq.StringArray
 
 	if err := row.Scan(
 		&p.ID, &p.Name, &p.Description, &p.Price, &p.Weight,
-		&p.AgeGroup, &breeds, &p.Category, &p.Stock, &p.ImageURL,
+		&p.AgeGroup, &breeds, &care,
+		&p.Category, &p.Stock, &p.ImageURL,
 		&p.CreatedAt, &p.UpdatedAt,
 	); err != nil {
 		if err == sql.ErrNoRows {
@@ -87,6 +95,8 @@ func (r *productRepo) FindByID(ctx context.Context, id int64) (*models.Product, 
 	}
 
 	p.BreedType = []string(breeds)
+	p.SpecialCare = []string(care)
+
 	return &p, nil
 }
 
@@ -97,15 +107,18 @@ func (r *productRepo) FindByID(ctx context.Context, id int64) (*models.Product, 
 func (r *productRepo) Create(ctx context.Context, p *models.Product) (int64, error) {
 	var id int64
 	breeds := pq.StringArray(p.BreedType)
+	care := pq.StringArray(p.SpecialCare)
 
 	err := r.db.QueryRowContext(ctx, `
         INSERT INTO products
         (name, description, price, weight, age_group,
-         breed_type, category, stock, image_url)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         breed_type, special_care,
+         category, stock, image_url)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
         RETURNING id`,
 		p.Name, p.Description, p.Price, p.Weight,
-		p.AgeGroup, breeds, p.Category, p.Stock, p.ImageURL,
+		p.AgeGroup, breeds, care,
+		p.Category, p.Stock, p.ImageURL,
 	).Scan(&id)
 
 	if err != nil {
@@ -120,17 +133,18 @@ func (r *productRepo) Create(ctx context.Context, p *models.Product) (int64, err
 // ==============================
 func (r *productRepo) Update(ctx context.Context, p *models.Product) error {
 	breeds := pq.StringArray(p.BreedType)
+	care := pq.StringArray(p.SpecialCare)
 
 	res, err := r.db.ExecContext(ctx, `
         UPDATE products SET
             name=$1, description=$2, price=$3, weight=$4,
-            age_group=$5, breed_type=$6, category=$7,
-            stock=$8, image_url=$9,
+            age_group=$5, breed_type=$6, special_care=$7,
+            category=$8, stock=$9, image_url=$10,
             updated_at=NOW()
-        WHERE id=$10`,
+        WHERE id=$11`,
 		p.Name, p.Description, p.Price, p.Weight,
-		p.AgeGroup, breeds, p.Category,
-		p.Stock, p.ImageURL, p.ID,
+		p.AgeGroup, breeds, care,
+		p.Category, p.Stock, p.ImageURL, p.ID,
 	)
 
 	if err != nil {

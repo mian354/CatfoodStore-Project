@@ -14,15 +14,15 @@ import (
 )
 
 func New(db *sql.DB) *gin.Engine {
-    // ⭐ ใช้ Default() → มี Logger + Recovery ให้ครบ
+
     r := gin.Default()
 
-    // ⭐⭐⭐ CORS สำหรับ React และ Nginx ⭐⭐⭐
+    // CORS สำหรับ React + Nginx
     r.Use(cors.New(cors.Config{
         AllowOrigins: []string{
             "http://localhost:3000",
             "http://127.0.0.1:3000",
-            "http://localhost",    // Nginx
+            "http://localhost",
             "http://127.0.0.1",
         },
         AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -30,9 +30,7 @@ func New(db *sql.DB) *gin.Engine {
         AllowCredentials: true,
     }))
 
-    // -------------------------------
     // HEALTH CHECK
-    // -------------------------------
     r.GET("/health", func(c *gin.Context) {
         if err := db.Ping(); err != nil {
             c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unhealthy"})
@@ -41,29 +39,22 @@ func New(db *sql.DB) *gin.Engine {
         c.JSON(200, gin.H{"status": "ok"})
     })
 
-    // -------------------------------
-    // PRODUCT MODULE (PUBLIC)
-    // -------------------------------
+    // PRODUCT MODULE
     productRepo := repository.NewProductRepository(db)
     productService := service.NewProductService(productRepo)
     productHandler := handler.NewProductHandler(productService)
-    productHandler.RegisterRoutes(r) // → /api/products
+    productHandler.RegisterRoutes(r)
 
-    // -------------------------------
-    // USER MODULE (REGISTER + LOGIN)
-    // -------------------------------
+    // USER MODULE
     userRepo := repository.NewUserRepository(db)
     userService := service.NewUserService(userRepo)
     userHandler := handler.NewUserHandler(userService)
     userHandler.RegisterRoutes(r)
 
-    // -------------------------------
-    // ADMIN ROUTES
-    // -------------------------------
+    // ADMIN MODULE
     admin := r.Group("/api/admin")
     admin.Use(middleware.AuthMiddleware, middleware.AdminOnly)
 
-    // Admin CRUD
     admin.POST("/products", productHandler.Create)
     admin.PUT("/products/:id", productHandler.Update)
     admin.DELETE("/products/:id", productHandler.Delete)
