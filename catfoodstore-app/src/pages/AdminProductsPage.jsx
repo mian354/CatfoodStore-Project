@@ -48,24 +48,33 @@ export default function AdminProductsPage() {
   }, []);
 
   /* ======================== GENERATE OPTIONS FROM DB ======================== */
-  useEffect(() => {
-    if (products.length > 0) {
-      const breeds = new Set();
-      const healths = new Set();
+useEffect(() => {
+  if (products.length > 0) {
+    const breeds = new Set();
+    const healths = new Set();
 
-      products.forEach((p) => {
-        if (Array.isArray(p.breed_type)) {
-          p.breed_type.forEach((b) => breeds.add(b));
-        }
-        if (Array.isArray(p.special_care)) {
-          p.special_care.forEach((h) => healths.add(h));
-        }
-      });
+    products.forEach((p) => {
+      if (Array.isArray(p.breed_type)) {
+        p.breed_type.forEach((b) => {
+          if (b && b.trim() !== "") breeds.add(b);
+        });
+      }
+      if (Array.isArray(p.special_care)) {
+        p.special_care.forEach((h) => {
+          if (h && h.trim() !== "") healths.add(h);
+        });
+      }
+    });
 
-      setBreedOptions(["all", ...Array.from(breeds)]);
-      setHealthOptions(["all", ...Array.from(healths)]);
-    }
-  }, [products]);
+    // ⭐ ล้างค่าซ้ำ + ลบ all ที่มาจาก DB
+    const cleanBreeds = Array.from(breeds).filter((b) => b !== "all");
+    const cleanHealth = Array.from(healths).filter((h) => h !== "all");
+
+    setBreedOptions(["all", ...cleanBreeds]);
+    setHealthOptions(["all", ...cleanHealth]);
+  }
+}, [products]);
+
 
   /* ======================== ADD PRODUCT ======================== */
   const addProduct = async () => {
@@ -228,40 +237,44 @@ export default function AdminProductsPage() {
             </select>
 
             {/* BREED TYPE */}
-            <div>
-              <p className="font-semibold">สายพันธุ์ที่เหมาะสม</p>
-              
-              {breedOptions.map((b) => (
-                <label key={b} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={newBreed.includes(b)}
-                    onChange={() =>
-                      setNewBreed((prev) =>
-                        prev.includes(b)
-                          ? prev.filter((x) => x !== b)
-                          : [...prev, b]
-                      )
-                    }
-                  />
-                  {b}
-                </label>
-              ))}
+<div>
+  <p className="font-semibold">สายพันธุ์ที่เหมาะสม</p>
 
-              {/* add new breed */}
-              <input
-                className="border p-2 rounded mt-2 w-full"
-                placeholder="เพิ่มสายพันธุ์ใหม่ (Enter เพื่อเพิ่ม)"
-                value={customBreed}
-                onChange={(e) => setCustomBreed(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && customBreed.trim()) {
-                    setNewBreed([...newBreed, customBreed.trim()]);
-                    setCustomBreed("");
-                  }
-                }}
-              />
-            </div>
+  {(() => {
+    const uniqueBreedOptions = [...new Set(breedOptions)];
+
+    return uniqueBreedOptions.map((b) => (
+      <label key={b} className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={newBreed.includes(b)}
+          onChange={() =>
+            setNewBreed((prev) =>
+              prev.includes(b)
+                ? prev.filter((x) => x !== b)
+                : [...prev, b]
+            )
+          }
+        />
+        {b === "all" ? "ทุกสายพันธุ์" : b}
+      </label>
+    ));
+  })()}
+
+  <input
+    className="border p-2 rounded mt-2 w-full"
+    placeholder="เพิ่มสายพันธุ์ใหม่ (Enter เพื่อเพิ่ม)"
+    value={customBreed}
+    onChange={(e) => setCustomBreed(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" && customBreed.trim()) {
+        setNewBreed([...newBreed, customBreed.trim()]);
+        setCustomBreed("");
+      }
+    }}
+  />
+</div>
+
 
             {/* SPECIAL CARE */}
             <div>
@@ -280,7 +293,7 @@ export default function AdminProductsPage() {
                       )
                     }
                   />
-                  {h}
+                   {h.trim().toLowerCase() === "all" ? "ทั้งหมด" : h}
                 </label>
               ))}
 
@@ -491,7 +504,8 @@ export default function AdminProductsPage() {
                       setEditItem({ ...editItem, special_care: updated });
                     }}
                   />
-                  {h}
+                  {h.trim().toLowerCase() === "all" ? "ทั้งหมด" : h}
+
                 </label>
               ))}
 
